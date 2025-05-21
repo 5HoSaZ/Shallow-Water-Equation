@@ -1,0 +1,83 @@
+# Recorded using PowerShell Measure-Command
+
+# Sequential
+## Run 1
+Ticks             : 798382038
+TotalDays         : 0.000924053284722222
+TotalHours        : 0.0221772788333333
+TotalMinutes      : 1.33063673
+TotalSeconds      : 79.8382038
+TotalMilliseconds : 79838.2038
+
+## Run 2
+Ticks             : 847999811
+TotalDays         : 0.000981481262731482
+TotalHours        : 0.0235555503055556
+TotalMinutes      : 1.41333301833333
+TotalSeconds      : 84.7999811
+TotalMilliseconds : 84799.9811
+
+## Run 3
+Ticks             : 736438404
+TotalDays         : 0.000852359263888889
+TotalHours        : 0.0204566223333333
+TotalMinutes      : 1.22739734
+TotalSeconds      : 73.6438404
+TotalMilliseconds : 73643.8404
+
+## Run 4
+Ticks             : 847413688
+TotalDays         : 0.00098080287962963
+TotalHours        : 0.0235392691111111
+TotalMinutes      : 1.41235614666667
+TotalSeconds      : 84.7413688
+TotalMilliseconds : 84741.3688
+
+## Run 5
+Ticks             : 817420384
+TotalDays         : 0.000946088407407407
+TotalHours        : 0.0227061217777778
+TotalMinutes      : 1.36236730666667
+TotalSeconds      : 81.7420384
+TotalMilliseconds : 81742.0384
+
+# Parallel - CUDA
+## Run 1
+Ticks             : 141392762
+TotalDays         : 0.000163649030092593
+TotalHours        : 0.00392757672222222
+TotalMinutes      : 0.235654603333333
+TotalSeconds      : 14.1392762
+TotalMilliseconds : 14139.2762
+
+## Run 2
+Ticks             : 141553065
+TotalDays         : 0.000163834565972222
+TotalHours        : 0.00393202958333333
+TotalMinutes      : 0.235921775
+TotalSeconds      : 14.1553065
+TotalMilliseconds : 14155.3065
+
+## Run 3
+Ticks             : 151545993
+TotalDays         : 0.000175400454861111
+TotalHours        : 0.00420961091666667
+TotalMinutes      : 0.252576655
+TotalSeconds      : 15.1545993
+TotalMilliseconds : 15154.5993
+
+## Run 4
+Ticks             : 151571759
+TotalDays         : 0.00017543027662037
+TotalHours        : 0.00421032663888889
+TotalMinutes      : 0.252619598333333
+TotalSeconds      : 15.1571759
+TotalMilliseconds : 15157.1759
+
+## Run 5
+Ticks             : 141358295
+TotalDays         : 0.000163609137731481
+TotalHours        : 0.00392661930555556
+TotalMinutes      : 0.235597158333333
+TotalSeconds      : 14.1358295
+TotalMilliseconds : 14135.8295
