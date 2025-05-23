@@ -17,21 +17,46 @@
 #define visdxx vis / (dx * dx) // Diffusion multiplier constants for diffusion over x.
 #define visdyy vis / (dy * dy) // Diffusion multiplier constants for diffusion over y.
 
-// Wrap index given range, return a triple of b-egin, c-enter and en-d.
-__device__ void wrapIndex(int idx, int range, int *b, int *c, int *d)
+// Clamp an interger given left and right border (inclusizv).
+__device__ int clampi(int value, int lb, int rb)
 {
-    if (idx == 0)
-        *b = range - 1, *c = idx, *d = idx + 1;
-    else if (idx == range - 1)
-        *b = idx - 1, *c = idx, *d = 0;
-    else
-        *b = idx - 1, *c = idx, *d = idx + 1;
+    if (value < lb)
+        value = lb;
+    else if (value > rb)
+        value = rb;
+    return value;
 }
 
 // Get array value by 2d-index (program specific).
 __device__ float getItem(float *arr, int x, int y)
 {
     return *(arr + x + y * nx);
+}
+
+// Reflect x-velocity on x-border.
+__device__ float reflectU(float *u, int x, int y)
+{
+    if (x < 0 || x >= nx)
+        return 0.0;
+    y = clampi(y, 0, ny - 1);
+    return getItem(u, x, y);
+}
+
+// Reflect y-velocity on y-border.
+__device__ float reflectV(float *v, int x, int y)
+{
+    if (y < 0 || y >= ny)
+        return 0.0;
+    x = clampi(x, 0, nx - 1);
+    return getItem(v, x, y);
+}
+
+// Mirror fluid's height on border.
+__device__ float mirrorH(float *h, int x, int y)
+{
+    x = clampi(x, 0, nx - 1);
+    y = clampi(y, 0, ny - 1);
+    return getItem(h, x, y);
 }
 
 void rk4(float *u, float *v, float *eta, float *f)
@@ -115,7 +140,7 @@ __global__ void rk4Solve(float *u_in, float *v_in, float *h_in, float *f, float 
     int stride = blockDim.x * gridDim.x;
 
     // Iterating index.
-    int i, ix, iy;
+    int i;
 
     // Begin, Center, enD.
     int xb, xc, xd, yb, yc, yd;
@@ -138,39 +163,39 @@ __global__ void rk4Solve(float *u_in, float *v_in, float *h_in, float *f, float 
     // Calculation loop
     for (i = index; i < nx * ny; i += stride)
     {
-        ix = i % nx, iy = i / nx;
-        wrapIndex(ix, nx, &xb, &xc, &xd);
-        wrapIndex(iy, ny, &yb, &yc, &yd);
+        xc = i % nx, yc = i / nx;
+        xb = xc - 1, xd = xc + 1;
+        yb = yc - 1, yd = yc + 1;
 
         // hx, hy term in continuity equation
-        hx = (getItem(h_in, xd, yc) * getItem(u_in, xd, yc) - getItem(h_in, xb, yc) * getItem(u_in, xb, yc)) * dx2;
-        hy = (getItem(h_in, xc, yd) * getItem(v_in, xc, yd) - getItem(h_in, xc, yb) * getItem(v_in, xc, yb)) * dy2;
+        hx = (mirrorH(h_in, xd, yc) * reflectU(u_in, xd, yc) - mirrorH(h_in, xb, yc) * reflectU(u_in, xb, yc)) * dx2;
+        hy = (mirrorH(h_in, xc, yd) * reflectV(v_in, xc, yd) - mirrorH(h_in, xc, yb) * reflectV(v_in, xc, yb)) * dy2;
 
         // ux, uy term in momentum equation
-        ux = getItem(u_in, xc, yc) * (getItem(u_in, xd, yc) - getItem(u_in, xb, yc)) * dx2;
-        uy = getItem(v_in, xc, yc) * (getItem(u_in, xc, yd) - getItem(u_in, xc, yb)) * dy2;
+        ux = getItem(u_in, xc, yc) * (reflectU(u_in, xd, yc) - reflectU(u_in, xb, yc)) * dx2;
+        uy = getItem(v_in, xc, yc) * (reflectU(u_in, xc, yd) - reflectU(u_in, xc, yb)) * dy2;
 
         // vx, vy term in momentum equation
-        vx = getItem(u_in, xc, yc) * (getItem(v_in, xd, yc) - getItem(v_in, xb, yc)) * dx2;
-        vy = getItem(v_in, xc, yc) * (getItem(v_in, xc, yd) - getItem(v_in, xc, yb)) * dy2;
+        vx = getItem(u_in, xc, yc) * (reflectV(v_in, xd, yc) - reflectV(v_in, xb, yc)) * dx2;
+        vy = getItem(v_in, xc, yc) * (reflectV(v_in, xc, yd) - reflectV(v_in, xc, yb)) * dy2;
 
         // fu, fv term in momentum equation
         fu = getItem(f, xc, yc) * getItem(u_in, xc, yc);
         fv = getItem(f, xc, yc) * getItem(v_in, xc, yc);
 
         // ghx, ghy term in momentum equation
-        gx = (getItem(h_in, xd, yc) - getItem(h_in, xb, yc)) * gdx2;
-        gy = (getItem(h_in, xc, yd) - getItem(h_in, xc, yb)) * gdy2;
+        gx = (mirrorH(h_in, xd, yc) - mirrorH(h_in, xb, yc)) * gdx2;
+        gy = (mirrorH(h_in, xc, yd) - mirrorH(h_in, xc, yb)) * gdy2;
 
         // ku, kv term in momentum equation
         ku = vd * getItem(u_in, xc, yc);
         kv = vd * getItem(v_in, xc, yc);
 
         // uxx, uyy, vxx, vyy diffusion term
-        uxx = (getItem(u_in, xd, yc) + getItem(u_in, xb, yc) - 2 * getItem(u_in, xc, yc)) * visdxx;
-        uyy = (getItem(u_in, xc, yd) + getItem(u_in, xc, yb) - 2 * getItem(u_in, xc, yc)) * visdyy;
-        vxx = (getItem(v_in, xd, yc) + getItem(v_in, xb, yc) - 2 * getItem(v_in, xc, yc)) * visdxx;
-        vyy = (getItem(v_in, xc, yd) + getItem(v_in, xc, yb) - 2 * getItem(v_in, xc, yc)) * visdyy;
+        uxx = (reflectU(u_in, xd, yc) + reflectU(u_in, xb, yc) - 2 * reflectU(u_in, xc, yc)) * visdxx;
+        uyy = (reflectU(u_in, xc, yd) + reflectU(u_in, xc, yb) - 2 * reflectU(u_in, xc, yc)) * visdyy;
+        vxx = (reflectV(v_in, xd, yc) + reflectV(v_in, xb, yc) - 2 * reflectV(v_in, xc, yc)) * visdxx;
+        vyy = (reflectV(v_in, xc, yd) + reflectV(v_in, xc, yb) - 2 * reflectV(v_in, xc, yc)) * visdyy;
 
         // Continuity equation calculation
         h_out[i] = -(hx + hy);

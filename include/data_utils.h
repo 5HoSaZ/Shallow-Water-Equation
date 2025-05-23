@@ -7,9 +7,6 @@ void printMatrix(float *mat, int size_x, int size_y);
 // Print an array.
 void printArray(float *arr, int size);
 
-// Wrap an interger given left and right border.
-int wrapi(int value, int lb, int rb);
-
 // Return a slice of a matrix.
 float *matrixSlice(float *mat, int size_x, int size_y, int x1, int x2, int y1, int y2);
 
