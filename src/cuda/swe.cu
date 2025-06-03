@@ -3,40 +3,74 @@
 #include "../../include/rk4.cuh"
 
 #include <stdio.h>
+#include <string.h>
 #include <malloc.h>
 #include <math.h>
 
-#define IniCenterDrop 0
-#define IniStepX 1
-#define IniPinchDrop 2
+// Apply drop at coordinates (x, y).
+void applyDrop(float *mat, float *grid_x, float *grid_y, float x = 0.0, float y = 0.0, float k = -1.0)
+{
+    for (int i = 0; i < nx * ny; i++)
+        mat[i] += k * perturb * exp(-(pow(grid_x[i] - x, 2) + pow(grid_y[i] - y, 2)));
+}
+
+// Apply step with slope angle k (degree) and distance d (from center (0, 0)).
+void applyStep(float *mat, float *grid_x, float *grid_y, float k = 0.0, float d = 0.0)
+{
+    // Convert k to radian
+    k = PI * k / 180.0;
+    float sin_k = sin(k), cos_k = cos(k);
+    for (int i = 0; i < nx * ny; i++)
+    {
+        if ((sin_k * grid_x[i] - cos_k * grid_y[i]) >= d)
+            mat[i] += perturb;
+    }
+}
 
 // Initialize fluid's surface and coriolis matrix.
-void initilizer(float *mat, float *grid_x, float *grid_y, int kind)
+void initilizer(float *mat, float *grid_x, float *grid_y, int argc, char **argv)
 {
     int i;
-    if (kind == IniCenterDrop)
-    {
+    float x = 0.0, y = 0.0;
 
-        for (i = 0; i < nx * ny; i++)
-            mat[i] = H0 - perturb * exp(-(pow(grid_x[i], 2) + pow(grid_y[i], 2)));
-    }
-    else if (kind == IniStepX)
+    // Set surface to base height
+    for (i = 0; i < nx * ny; i++)
+        mat[i] = H0;
+
+    // No modification
+    if (argc == 1)
     {
-        for (i = 0; i < nx * ny; i++)
+        printf("Initilize: CenterDrop (default)\n");
+        applyDrop(mat, grid_x, grid_y);
+        return;
+    }
+
+    // Process cmd input
+    for (i = 1; i < argc; i++)
+    {
+        // Modifier: Drop, Args: float x, float y
+        if (strcmp(argv[i], "-drop") == 0)
         {
-            if (grid_x[i] < 0)
-                mat[i] = H0 + perturb;
-            else
-                mat[i] = H0;
+            x = atof(argv[i + 1]), y = atof(argv[i + 2]);
+            printf("Modify: Drop (x:%.2f, y:%.2f)\n", x, y);
+            applyDrop(mat, grid_x, grid_y, x, y);
+            i += 2;
         }
-    }
-    else if (kind == IniPinchDrop)
-    {
-        for (i = 0; i < nx * ny; i++)
+        // Modifier: Pinch, Args: float x, float y
+        else if (strcmp(argv[i], "-pinch") == 0)
         {
-            mat[i] = H0;
-            mat[i] -= perturb * exp(-(pow(grid_x[i] - 2, 2) + pow(grid_y[i] - 2, 2)));
-            mat[i] += perturb * exp(-(pow(grid_x[i] + 2, 2) + pow(grid_y[i] + 2, 2)));
+            x = atof(argv[i + 1]), y = atof(argv[i + 2]);
+            printf("Modify: Pinch (x:%.2f, y:%.2f)\n", x, y);
+            applyDrop(mat, grid_x, grid_y, x, y, 1.0);
+            i += 2;
+        }
+        // Modifier: Step, Args: float k, float d
+        else if (strcmp(argv[i], "-step") == 0)
+        {
+            x = atof(argv[i + 1]), y = atof(argv[i + 2]);
+            printf("Modify: Step (k:%.2f, d:%.2f)\n", x, y);
+            applyStep(mat, grid_x, grid_y, x, y);
+            i += 2;
         }
     }
 }
@@ -97,7 +131,9 @@ int main(int argc, char *argv[])
     // Fluid depth.
     float *eta, *eta_gpu;
     eta = (float *)malloc(sizeof(float) * nx * ny);
-    initilizer(eta, grid_x, grid_y, IniCenterDrop);
+    // Initialize with option from command line
+    initilizer(eta, grid_x, grid_y, argc, argv);
+
     // initilizer(eta, grid_x, grid_y, IniPinchDrop);
     cudaMalloc((void **)&eta_gpu, sizeof(float) * nx * ny);
     cudaMemcpy(eta_gpu, eta, sizeof(float) * nx * ny, cudaMemcpyHostToDevice);
