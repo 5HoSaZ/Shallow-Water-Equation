@@ -53,8 +53,8 @@ cmd: out/cuda/swe.exe [perturb options] [Args]
 
 -step   : Perturb using a step function with slope k (degree) and distance d
     Args:
-    k (float): Step boundaries slope in degree
-    d (float): Distance from step boundaries to centre O(0, 0)
+    k (float): Step boundary slope in degree
+    d (float): Distance from step boundary to centre O(0, 0)
 ```
 
 New render results from different initial perturbations:
