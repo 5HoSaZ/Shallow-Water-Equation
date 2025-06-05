@@ -1,7 +1,7 @@
 # Shallow Water Equation - CUDA
 
-Middle project submission for **IT4130E-Parallel & Distributed Programming, 2024.2**
-By Group 6
+Middle project submission for **IT4130E-Parallel & Distributed Programming, 2024.2**\
+By Group 6\
 Submission date: **05/06/2025**
 
 ## Group Members
