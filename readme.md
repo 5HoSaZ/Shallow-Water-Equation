@@ -22,7 +22,7 @@ This project aims to implement **Shallow Water Equation (SWE)** in C programming
     <img alt="SWE-CenterDrop" src="render\swe_CenterDrop_default.gif" width="600"/>
 </p>
 
-To generate new render data, execute either the [sequential](out\sequential) or [cuda](out\cuda) version of the SWE program. This will generate new render files for each timestep at [render\tmp](render\tmp).
+To generate new render data, execute either the [sequential](out\sequential) or [cuda](out\cuda) version of the SWE program. This will generate new render files for each timestep at [render\tmp](render\tmp) (Please create it first to properly use the program).
 
 ```bash
 # For the sequential version
