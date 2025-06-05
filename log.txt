@@ -1,4 +1,9 @@
 # Recorded using PowerShell Measure-Command
+# Computer's specs
+|System Type	| x64-based PC                                                                          |
+|Processor	    | AMD Ryzen 5 5600H with Radeon Graphics, 3301 MHz, 6 Core(s), 12 Logical Processor(s)  |
+|Installed RAM  | 16GB                                                                                  |
+|GPU	        | NVIDIA GeForce RTX 3050 Ti Laptop GPU                                                 |
 
 # Sequential
 ## Run 1
